@@ -1,25 +1,18 @@
 version: "3.7"
+
 services:
-  mongo:
-    image: mongo
+  postgresql:
+    image: postgres
     environment:
-      MONGO_INITDB_DATABASE: kenny_docs_db
-      MONGO_INITDB_ROOT_USERNAME: user
-      MONGO_INITDB_ROOT_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: documentsdb
+      TZ: Europe/Bucharest
+      PGTZ: Europe/Bucharest
     ports:
-      - 27019:27017
+      - "54321:5432"
     volumes:
-      - kenny_docs_db:/data/db
-      
-  mongo-express:
-    image: mongo-express
-    ports:
-      - 9081:8081
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: user
-      ME_CONFIG_MONGODB_ADMINPASSWORD: password
-    logging:
-      driver: none
+      - documents_db:/var/lib/postgresql/documents_db
 
 volumes:
-  kenny_docs_db:
+  documents_db:

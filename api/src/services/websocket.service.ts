@@ -40,7 +40,7 @@ export class WebsocketService {
             let docSession = this.sessions.get(docId);
             if (docSession === undefined) {
                docSession = {
-                  content: [], // TODO: replace with syncronous call to deocument service
+                  content: [], // TODO: replace with syncronous call to document service
                   viewers: []
                };
             }
