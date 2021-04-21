@@ -2,11 +2,13 @@ import { DocumentService } from './services/document.service';
 import * as dotenv from 'dotenv';
 import express from 'express';
 import winston from 'winston';
+import { Document } from './models/entities/document.entity';
 import expressWs from 'express-ws';
 import cors from 'cors';
 import { InstanceManager } from './util/instance-manager';
 import { ErrorHandlerMiddleware } from './middleware';
 import { createConnection } from 'typeorm';
+import { DocumentController } from './controllers/document.controller';
 
 const init = async () => {
    try {
@@ -46,7 +48,7 @@ const init = async () => {
 
       // init controllers
       [
-         
+         new DocumentController()
       ].forEach(controller => app.use(`${controller.path}`, controller.router))
 
       // start server

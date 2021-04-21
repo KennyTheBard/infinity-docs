@@ -1,4 +1,12 @@
-import { WebsocketEvent, WebsocketEventType } from './../../../common/models/websocket-event';
+import {
+   ConnectEvent,
+   WebsocketEvent,
+   WebsocketEventType,
+   DisconnectEvent,
+   ErrorEvent,
+   ContentChangedEvent,
+   ContentChangedType
+} from './../../../common/models/websocket-event';
 import expressWs from 'express-ws';
 import * as ws from 'ws';
 import * as http from 'http';
@@ -45,6 +53,16 @@ export class WebsocketService {
                };
             }
 
+            // notify other viewers on this user joining
+            docSession.viewers.forEach(v => v.ws.send(
+               JSON.stringify({
+                  type: WebsocketEventType.VIEWER_CONNECTED,
+                  data: {
+                     name: viewer.name
+                  }
+               })
+            ));
+
             docSession.viewers.push(viewer);
             this.sessions.set(docId, docSession);
 
@@ -57,7 +75,7 @@ export class WebsocketService {
                // notify other viewers on this user leave
                docSession.viewers.forEach(v => v.ws.send(
                   JSON.stringify({
-                     type: WebsocketEventType.VIEWER_CONNECTED,
+                     type: WebsocketEventType.VIEWER_DISCONNECTED,
                      data: {
                         name: viewer.name
                      }
@@ -99,39 +117,43 @@ export class WebsocketService {
          return;
       }
 
-      // if ((data as QuestionHostMessage).guesserCode !== undefined) {
-      //    const guesser = game.players.filter(p => p.code === data.guesserCode)[0];
+      if ((message as ContentChangedEvent) !== undefined) {
+         const ccMsg = message as ContentChangedEvent;
+         let line;
+         let docSession = this.sessions.get(docId);
 
-      //    if (!guesser) {
-      //       // TODO: handle this case
-      //       console.error('Missing guesser')
-      //    }
+         switch (ccMsg.data.type) {
+            case ContentChangedType.LINE_ADDED:
+               docSession.content = docSession.content.splice(ccMsg.data.line, 0, '');
+               break;
 
-      //    guesser.ws.send(JSON.stringify({
-      //       event: 'question',
-      //       objective: 'You are the guesser.',
-      //       question: data.text,
-      //       options: data.options,
-      //    }), (err) => err && console.error(err))
+            case ContentChangedType.LINE_REMOVED:
+               docSession.content = docSession.content.splice(ccMsg.data.line, 1);
+               break;
 
-      //    console.log(game.players.map(p => { return { name: p.name, code: p.code } }, guesser))
-      //    game.players.filter(p => p.code !== data.guesserCode)
-      //       .forEach(p => p.ws.send(
-      //          JSON.stringify({
-      //             event: 'question',
-      //             objective: `Guess what would ${guesser.name} answer to this question?`,
-      //             question: data.text,
-      //             options: data.options,
-      //          }), (err) => err && console.error(err)));
-      // } else if ((data as ResultHostMessage).playersAnswers !== undefined) {
-      //    game.players.forEach(p => p.ws.send(
-      //       JSON.stringify({
-      //          ...data,
-      //          event: 'result'
-      //       }),
-      //       (err) => err && console.error(err)
-      //    ));
-      // }
+            case ContentChangedType.CHARACTER_ADDED:
+               line = docSession.content[ccMsg.data.line];
+               docSession.content[ccMsg.data.line] = line.slice(0, ccMsg.data.position) + ccMsg.data.character + line.slice(ccMsg.data.position + 1);
+               break;
+
+            case ContentChangedType.CHARACTER_REMOVED:
+               line = docSession.content[ccMsg.data.line];
+               docSession.content[ccMsg.data.line] = line.slice(0, ccMsg.data.position) + line.slice(ccMsg.data.position + 1);
+               break;
+         }
+
+         this.sessions.set(docId, docSession);
+
+         docSession.viewers.forEach(v => v.ws.send(
+            JSON.stringify(message)
+         ));
+
+      } else if ((message as ErrorEvent) !== undefined) {
+         // TODO: gandle error
+
+      } else {
+         // TODO: handle invalid message
+      }
    }
 
 }

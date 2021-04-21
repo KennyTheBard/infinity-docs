@@ -7,6 +7,7 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "outDir": "build"
   },
   "lib": ["es2015"]
