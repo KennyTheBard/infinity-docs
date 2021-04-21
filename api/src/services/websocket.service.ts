@@ -1,3 +1,4 @@
+import { DocumentService } from './document.service';
 import {
    ConnectEvent,
    WebsocketEvent,
@@ -25,19 +26,25 @@ interface Viewer {
 
 export class WebsocketService {
 
-   private readonly sessions: Map<string, DocumentSession> = new Map<string, DocumentSession>();
+   private readonly sessions: Map<number, DocumentSession> = new Map<number, DocumentSession>();
+
 
    constructor(
       private readonly router: expressWs.Router,
+      private readonly documentService: DocumentService
    ) {
+      this.initWebsocketServer();
+   }
 
+
+   initWebsocketServer = () => {
       this.router.ws('/', (ws: ws, req: http.IncomingMessage) => {
          async () => {
             const query = url.parse(req.url, true).query;
-            const docId = query.docId as string;
+            const docId = query.docId as unknown as number;
 
             if (!docId) {
-               ws.close(1011, 'No docId provided');
+               ws.close(1011, 'No docId provided or wrong format');
             }
 
             const viewer = {
@@ -48,7 +55,7 @@ export class WebsocketService {
             let docSession = this.sessions.get(docId);
             if (docSession === undefined) {
                docSession = {
-                  content: [], // TODO: replace with syncronous call to document service
+                  content: (await this.documentService.getById(docId)).content.split('\n'),
                   viewers: []
                };
             }
@@ -101,8 +108,9 @@ export class WebsocketService {
       });
    }
 
+
    handleMessage = (
-      docId: string,
+      docId: number,
       ws: ws,
       stringifiedMessage: string
    ) => {
@@ -149,7 +157,7 @@ export class WebsocketService {
          ));
 
       } else if ((message as ErrorEvent) !== undefined) {
-         // TODO: gandle error
+         // TODO: handle error
 
       } else {
          // TODO: handle invalid message
