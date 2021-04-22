@@ -1,13 +1,11 @@
 import { DocumentService } from './document.service';
 import {
-   ConnectEvent,
    WebsocketEvent,
    WebsocketEventType,
-   DisconnectEvent,
    ErrorEvent,
    ContentChangedEvent,
    ContentChangedType
-} from './../../../common/models/websocket-event';
+} from '../models/websocket-event';
 import expressWs from 'express-ws';
 import * as ws from 'ws';
 import * as http from 'http';

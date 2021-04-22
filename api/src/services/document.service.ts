@@ -1,4 +1,4 @@
-import { Connection, In, Repository } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { Document, DocumentUserView } from '../models/entities/document.entity';
 import { PaginationFilter } from '../models/pagination';
 

@@ -1,0 +1,26 @@
+.alert {
+  display: flex;
+  flex-direction: row-reverse; 
+
+  border-width: 2px;
+  border-color: black;
+  margin: 10px 0px 10px 0px;
+  margin-left: 20%;
+  padding: 1px 0px 3px 0px;
+  width: 60%;
+
+  .alert-ribbon {
+    background-color: darkred;
+    height: 100%;
+    width: 10px;
+  }
+
+  .alert-message {
+    font-size: 1rem;
+    text-align: center;
+    font-weight: bold;
+    background-color: whitesmoke;
+    color: black;
+  }
+  
+}
