@@ -47,8 +47,10 @@ export class WebsocketService {
             ws.close(1011, 'No docId provided or wrong format');
          }
 
+         const viewerName = uuid();
+
          const viewer = {
-            name: uuid(),
+            name: viewerName,
             ws
          };
 
@@ -109,6 +111,7 @@ export class WebsocketService {
             this.handleMessage(
                docId,
                ws,
+               viewerName,
                data as string
             );
          });
@@ -126,6 +129,7 @@ export class WebsocketService {
    handleMessage = (
       docId: number,
       ws: ws,
+      name: string,
       stringifiedMessage: string
    ) => {
       const message = JSON.parse(stringifiedMessage) as WebsocketEvent;
@@ -166,9 +170,10 @@ export class WebsocketService {
 
          this.sessions.set(docId, docSession);
 
-         docSession.viewers.forEach(v => v.ws.send(
-            JSON.stringify(message)
-         ));
+         docSession.viewers.filter(v => v.name !== name)
+            .forEach(v => v.ws.send(
+               JSON.stringify(message)
+            ));
 
       } else if ((message as ErrorEvent) !== undefined) {
          // TODO: handle error
