@@ -14,9 +14,11 @@
 
    input.content-line {
       border: 0px;
+      width: 100%;
       
       &:focus {
          outline: none;
+         background-color: lightgrey;
       }
    }
 }

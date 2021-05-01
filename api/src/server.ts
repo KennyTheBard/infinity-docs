@@ -9,6 +9,7 @@ import { InstanceManager } from './util/instance-manager';
 import { ErrorHandlerMiddleware } from './middleware';
 import { createConnection } from 'typeorm';
 import { DocumentController } from './controllers/document.controller';
+import { WebsocketService } from './services/websocket.service';
 
 const init = async () => {
    try {
@@ -37,6 +38,7 @@ const init = async () => {
 
       // init services
       InstanceManager.register(new DocumentService(db));
+      InstanceManager.register(new WebsocketService(router));
 
       // init middleware
       // Ex: InstanceManager.register(middleware instance);

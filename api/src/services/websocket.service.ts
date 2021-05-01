@@ -11,6 +11,7 @@ import * as ws from 'ws';
 import * as http from 'http';
 import * as url from 'url';
 import { v4 as uuid } from 'uuid';
+import { InstanceManager } from '../util/instance-manager';
 
 interface DocumentSession {
    content: string[]; // document contents split in lines
@@ -25,85 +26,100 @@ interface Viewer {
 export class WebsocketService {
 
    private readonly sessions: Map<number, DocumentSession> = new Map<number, DocumentSession>();
+   private readonly documentService: DocumentService
 
 
    constructor(
       private readonly router: expressWs.Router,
-      private readonly documentService: DocumentService
    ) {
+      this.documentService = InstanceManager.get(DocumentService);
+
       this.initWebsocketServer();
    }
 
 
    initWebsocketServer = () => {
       this.router.ws('/', (ws: ws, req: http.IncomingMessage) => {
-         async () => {
-            const query = url.parse(req.url, true).query;
-            const docId = query.docId as unknown as number;
+         const query = url.parse(req.url, true).query;
+         const docId = query.docId as unknown as number;
 
-            if (!docId) {
-               ws.close(1011, 'No docId provided or wrong format');
-            }
+         if (!docId) {
+            ws.close(1011, 'No docId provided or wrong format');
+         }
 
-            const viewer = {
-               name: uuid(),
-               ws
+         const viewer = {
+            name: uuid(),
+            ws
+         };
+
+         let newSession = false;
+         let docSession = this.sessions.get(docId);
+         if (docSession === undefined) {
+            docSession = {
+               content: [],
+               viewers: []
             };
 
-            let docSession = this.sessions.get(docId);
-            if (docSession === undefined) {
-               docSession = {
-                  content: (await this.documentService.getById(docId)).content.split('\n'),
-                  viewers: []
-               };
-            }
+            newSession = true;
+         }
 
-            // notify other viewers on this user joining
+         // notify other viewers on this user joining
+         docSession.viewers.forEach(v => v.ws.send(
+            JSON.stringify({
+               type: WebsocketEventType.VIEWER_CONNECTED,
+               data: {
+                  name: viewer.name
+               }
+            })
+         ));
+
+         docSession.viewers.push(viewer);
+         this.sessions.set(docId, docSession);
+
+         // load document content in case it's not already loaded
+         if (newSession) {
+            this.loadDocumentContent(docId);
+         }
+
+         ws.on('close', () => {
+            const docSession = this.sessions.get(docId);
+
+            // remove this viewer from the session
+            docSession.viewers = docSession.viewers.filter(v => v.name !== viewer.name);
+
+            // notify other viewers on this user leave
             docSession.viewers.forEach(v => v.ws.send(
                JSON.stringify({
-                  type: WebsocketEventType.VIEWER_CONNECTED,
+                  type: WebsocketEventType.VIEWER_DISCONNECTED,
                   data: {
                      name: viewer.name
                   }
                })
             ));
 
-            docSession.viewers.push(viewer);
-            this.sessions.set(docId, docSession);
+            // update sessions
+            if (docSession.viewers.length === 0) {
+               this.sessions.delete(docId);
+            } else {
+               this.sessions.set(docId, docSession);
+            }
+         });
 
-            ws.on('close', () => {
-               const docSession = this.sessions.get(docId);
-
-               // remove this viewer from the session
-               docSession.viewers = docSession.viewers.filter(v => v.name !== viewer.name);
-
-               // notify other viewers on this user leave
-               docSession.viewers.forEach(v => v.ws.send(
-                  JSON.stringify({
-                     type: WebsocketEventType.VIEWER_DISCONNECTED,
-                     data: {
-                        name: viewer.name
-                     }
-                  })
-               ));
-
-               // update sessions
-               if (docSession.viewers.length === 0) {
-                  this.sessions.delete(docId);
-               } else {
-                  this.sessions.set(docId, docSession);
-               }
-            });
-
-            ws.on('message', (data: ws.Data) => {
-               this.handleMessage(
-                  docId,
-                  ws,
-                  data as string
-               );
-            });
-         }
+         ws.on('message', (data: ws.Data) => {
+            this.handleMessage(
+               docId,
+               ws,
+               data as string
+            );
+         });
       });
+   }
+
+
+   loadDocumentContent = async (docId: number) => {
+      const docSession = this.sessions.get(docId);
+      docSession.content = (await this.documentService.getById(docId)).content.split('\n');
+      this.sessions.set(docId, docSession);
    }
 
 
