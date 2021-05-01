@@ -131,7 +131,7 @@ export class WebsocketService {
       const message = JSON.parse(stringifiedMessage) as WebsocketEvent;
 
       // check if message is correctly formated
-      if (!!message) {
+      if (!message) {
          ws.send(JSON.stringify({
             type: WebsocketEventType.ERROR,
             data: 'Incorrectly formated message'
