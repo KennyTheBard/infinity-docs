@@ -14,7 +14,8 @@ export class DocumentService {
 
    create = async (dto: DocumentUserView) => {
       const document = this.documentRepository.create(dto);
-      await this.documentRepository.insert(document);
+
+      return (await this.documentRepository.insert(document)).generatedMaps[0];
    }
 
    getById = async (id: number): Promise<Document> => {
@@ -23,8 +24,9 @@ export class DocumentService {
       });
    }
 
-   get = async (pagination: PaginationFilter): Promise<[DocumentUserView[], number]> => {
+   getPreview = async (pagination: PaginationFilter): Promise<[DocumentUserView[], number]> => {
       return await this.documentRepository.createQueryBuilder('document')
+         .select(['document.id', 'document.title'])
          .skip(pagination.page * pagination.size)
          .limit(pagination.size)
          .getManyAndCount();
@@ -36,11 +38,10 @@ export class DocumentService {
       document.title = dto.title;
       document.content = dto.content;
 
-
       this.documentRepository.save(document);
    }
 
-   delete = async (id: string) => {
+   delete = async (id: number) => {
       await this.documentRepository.delete(id);
    }
 

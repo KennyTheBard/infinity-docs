@@ -1,10 +1,10 @@
 import { BrowserRouter, Route, RouteComponentProps, Switch } from 'react-router-dom';
-import HomeComponent from './components/Home.components';
-import DocumentComponent from './components/Document.component';
-import './App.css';
+import HomeComponent from './components/home/Home.components';
+import DocumentComponent from './components/document/Document.component';
+import './App.scss';
 import React from 'react';
 import Helmet from 'react-helmet';
-import { Alert } from './components/Alert.component';
+import { Alert } from './components/alert/Alert.component';
 
 
 export default class App extends React.Component {

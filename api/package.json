@@ -6,8 +6,8 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "start": "nodemon -r dotenv/config build/api/src/server.js dotenv_config_path=.env",
-    "start-prod": "node -r dotenv/config build/api/src/server.js dotenv_config_path=.env-prod",
+    "start": "nodemon -r dotenv/config build/server.js dotenv_config_path=.env",
+    "start-prod": "node -r dotenv/config build/server.js dotenv_config_path=.env-prod",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

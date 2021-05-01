@@ -14,34 +14,18 @@ export class DocumentController {
    ) {
       this.documentService = InstanceManager.get(DocumentService);
 
-      this.router.get('/', this.getDocuments);
       this.router.post('/', this.createDocument);
-   }
-
-   /**
-    * GET /document
-    */
-   getDocuments = async (req: Request, res: Response) => {
-      const paginationFiler = {
-         page: req.query['page'] as unknown as number || 0,
-         size: req.query['size'] as unknown as number || DEFAULT_PAGE_SIZE
-      }
-
-      try {
-         const result = await this.documentService.get(paginationFiler);
-         
-         res.status(200).send(result);
-      } catch (err) {
-         res.status(401).send(err.message);
-      }
+      this.router.get('/', this.getDocumentsPreview);
+      this.router.get('/:docId', this.getDocument);
+      this.router.delete('/:docId', this.deleteDocument);
    }
 
    /**
     * POST /document
     */
-    createDocument = async (req: Request, res: Response) => {
-      const { 
-         title, content   
+   createDocument = async (req: Request, res: Response) => {
+      const {
+         title, content
       } = req.body;
 
       try {
@@ -51,6 +35,55 @@ export class DocumentController {
          });
 
          res.status(201).send(result);
+      } catch (err) {
+         res.status(401).send(err.message);
+      }
+   }
+
+
+   /**
+    * GET /document
+    */
+   getDocumentsPreview = async (req: Request, res: Response) => {
+      const paginationFiler = {
+         page: req.query['page'] as unknown as number || 0,
+         size: req.query['size'] as unknown as number || DEFAULT_PAGE_SIZE
+      }
+
+      try {
+         const result = await this.documentService.getPreview(paginationFiler);
+
+         res.status(200).send(result[0]);
+      } catch (err) {
+         res.status(401).send(err.message);
+      }
+   }
+
+   /**
+    * GET /document/:id
+    */
+   getDocument = async (req: Request, res: Response) => {
+      const docId = req.params['docId'] as unknown as string;
+
+      try {
+         const result = await this.documentService.getById(+docId);
+
+         res.status(200).send(result);
+      } catch (err) {
+         res.status(401).send(err.message);
+      }
+   }
+
+   /**
+    * DELETE /document/:id
+    */
+   deleteDocument = async (req: Request, res: Response) => {
+      const docId = req.params['docId'] as unknown as string;
+
+      try {
+         const result = await this.documentService.delete(+docId);
+
+         res.status(200).send();
       } catch (err) {
          res.status(401).send(err.message);
       }

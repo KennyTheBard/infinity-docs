@@ -1,0 +1,22 @@
+.title {
+
+} 
+
+.content {
+   margin: 10px;
+   padding-left: 10px;
+   padding-right: 10px;
+   border-style: ridge;
+   border-width: 2px;
+   border-color: black;
+   border-radius: 3px;
+   min-height: 3px;
+
+   input.content-line {
+      border: 0px;
+      
+      &:focus {
+         outline: none;
+      }
+   }
+}
