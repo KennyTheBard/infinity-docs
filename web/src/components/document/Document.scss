@@ -1,8 +1,29 @@
 .title {
+   margin: 10px;
+
+   & textarea {
+      overflow: hidden;
+      white-space: nowrap;
+      padding-right: 10px;
+      padding-left: 5px;
+      border: none;
+      outline: none;
+      border-color: transparent; 
+      resize: none;
+      width: 100%;
+      background: transparent;
+      font-size: x-large;
+      font-weight: bold;
+
+      &:focus {
+         outline: none;
+         background-color: lightgray;
+      }
+   }
 }
 
 .content {
-   overflow: auto;
+   overflow: scroll;
    height: 75vh;
    margin: 10px;
    border-style: ridge;

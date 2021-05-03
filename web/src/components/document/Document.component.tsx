@@ -30,6 +30,7 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
       docId?: number;
       name?: string;
       title: string;
+      focusOnTitle: boolean;
       contentLines: string[];
       viewers: string[];
       lineSelected?: number;
@@ -37,6 +38,7 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
       ws?: WebSocket;
    } = {
          title: '',
+         focusOnTitle: false,
          contentLines: [],
          viewers: []
       }
@@ -136,15 +138,21 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
       switch (data.type) {
          case ContentChangedType.LINE_ADDED:
             console.log(data);
-            this.addLine(data.lineIndex, data.cursorPosition);
+            this.addLine(data.lineIndex || 0, data.cursorPosition);
             break;
 
          case ContentChangedType.LINE_REMOVED:
-            this.removeLine(data.lineIndex);
+            this.removeLine(data.lineIndex || 0);
             break;
 
          case ContentChangedType.LINE_CHANGED:
-            this.changeLine(data.lineIndex, data.lineContent || '');
+            this.changeLine(data.lineIndex || 0, data.changedContent || '');
+            break;
+
+         case ContentChangedType.TITLE_CHANGED:
+            this.setState({
+               title: data.changedContent
+            });
             break;
 
          default:
@@ -208,7 +216,7 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
          data: {
             type: ContentChangedType.LINE_CHANGED,
             lineIndex: index,
-            lineContent: event.target.value
+            changedContent: event.target.value
          } as ContentChangeData
       } as ContentChangedEvent));
    }
@@ -304,6 +312,21 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
    }
 
 
+   onTitleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+      this.setState({
+         title: event.target.value
+      });
+
+      this.state.ws?.send(JSON.stringify({
+         type: WebsocketEventType.CONTENT_CHANGED,
+         data: {
+            type: ContentChangedType.TITLE_CHANGED,
+            changedContent: event.target.value
+         } as ContentChangeData
+      } as ContentChangedEvent));
+   }
+
+
    render() {
       this.inputLines = this.state.contentLines.map(() => null);
 
@@ -317,7 +340,20 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
             </div>
 
             <div className="title">
-               {this.state.title}
+               <textarea value={this.state.title} rows={1} spellCheck={false}
+                  onInput={this.onTitleChange}
+                  onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                     if (event.key === 'Enter') {
+                        event.preventDefault();
+                     }
+                  }}
+                  onFocus={() => this.setState({
+                     focusOnTitle: true
+                  })}
+                  onBlur={() => this.setState({
+                     focusOnTitle: false
+                  })}
+               />
             </div>
 
             <div className="content">
@@ -329,7 +365,7 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
 
                      <textarea value={line} rows={1} spellCheck={false}
                         ref={input => {
-                           if (input && index === this.state.lineSelected) {
+                           if (input && !this.state.focusOnTitle && index === this.state.lineSelected) {
                               input.focus();
 
                               // bind cursor position to selection range

@@ -162,12 +162,12 @@ export class WebsocketService {
          let docSession = this.sessions.get(docId);
 
          // get lock on document
-         this.documentLock.writeLock(''+docId, (release) => {
+         this.documentLock.writeLock('' + docId, (release) => {
             // cancel database update
             const existingTimer = this.updateTimers.get(docId);
             if (existingTimer !== undefined) {
                clearTimeout(existingTimer);
-            } 
+            }
 
             switch (ccMsg.data.type) {
                case ContentChangedType.LINE_ADDED:
@@ -179,7 +179,7 @@ export class WebsocketService {
                      docSession.content[ccMsg.data.lineIndex].substring(ccMsg.data.cursorPosition)
                   );
                   break;
-   
+
                case ContentChangedType.LINE_REMOVED:
                   // TODO: Check if lineIndex - 1 and lineIndex exist
                   docSession.content.splice(
@@ -188,10 +188,14 @@ export class WebsocketService {
                      docSession.content[ccMsg.data.lineIndex - 1] + docSession.content[ccMsg.data.lineIndex]
                   );
                   break;
-   
+
                case ContentChangedType.LINE_CHANGED:
                   // TODO: Check if the lineIndex exists
-                  docSession.content[ccMsg.data.lineIndex] = ccMsg.data.lineContent;
+                  docSession.content[ccMsg.data.lineIndex] = ccMsg.data.changedContent;
+                  break;
+
+               case ContentChangedType.TITLE_CHANGED:
+                  docSession.title = ccMsg.data.changedContent;
                   break;
             }
 
