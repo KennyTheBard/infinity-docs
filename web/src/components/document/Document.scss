@@ -23,8 +23,9 @@
 }
 
 .content {
-   overflow: scroll;
-   height: 75vh;
+   overflow: auto;
+   overflow-y: auto;
+   height: 70vh;
    margin: 10px;
    border-style: ridge;
    border-width: 2px;

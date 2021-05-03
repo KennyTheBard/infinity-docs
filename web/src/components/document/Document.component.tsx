@@ -327,6 +327,16 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
    }
 
 
+   downloadFile = () => {
+      const element = document.createElement("a");
+      const file = new Blob([this.state.contentLines.join('\n')], { type: 'text/plain' });
+      element.href = URL.createObjectURL(file);
+      element.download = `${this.state.title.replace(/\W/g, '').substring(0, 30).toLowerCase()}.txt`;
+      document.body.appendChild(element);
+      element.click();
+   }
+
+
    render() {
       this.inputLines = this.state.contentLines.map(() => null);
 
@@ -354,6 +364,12 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
                      focusOnTitle: false
                   })}
                />
+            </div>
+
+            <div className="actions">
+               <button onClick={() => this.downloadFile()}>
+                  Download
+               </button>
             </div>
 
             <div className="content">
