@@ -44,15 +44,13 @@ export interface ErrorEvent {
 export enum ContentChangedType {
    LINE_ADDED = 'line_added',
    LINE_REMOVED = 'line_removed',
-   CHARACTER_ADDED = 'character_added',
-   CHARACTER_REMOVED = 'character_removed'
+   LINE_CHANGED = 'line_changed'
 }
 
 
 export interface ContentChangeData {
    type: ContentChangedType,
    line: number,
-   position?: number,
-   character?: string & {length : 1}
+   lineContent?: string
 }
 

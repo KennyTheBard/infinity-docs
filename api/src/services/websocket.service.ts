@@ -75,6 +75,14 @@ export class WebsocketService {
             })
          ));
 
+         // notify this viewer of the viewers already connected
+         docSession.viewers.forEach(v => ws.send(JSON.stringify({
+            type: WebsocketEventType.VIEWER_CONNECTED,
+            data: {
+               name: v.name
+            }
+         })));
+
          docSession.viewers.push(viewer);
          this.sessions.set(docId, docSession);
 
@@ -157,14 +165,9 @@ export class WebsocketService {
                docSession.content = docSession.content.splice(ccMsg.data.line, 1);
                break;
 
-            case ContentChangedType.CHARACTER_ADDED:
+            case ContentChangedType.LINE_CHANGED:
                line = docSession.content[ccMsg.data.line];
-               docSession.content[ccMsg.data.line] = line.slice(0, ccMsg.data.position) + ccMsg.data.character + line.slice(ccMsg.data.position + 1);
-               break;
-
-            case ContentChangedType.CHARACTER_REMOVED:
-               line = docSession.content[ccMsg.data.line];
-               docSession.content[ccMsg.data.line] = line.slice(0, ccMsg.data.position) + line.slice(ccMsg.data.position + 1);
+               docSession.content[ccMsg.data.line] = ccMsg.data.lineContent;
                break;
          }
 

@@ -72,7 +72,7 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
    connectToWebsocket = (docId: number | undefined) => {
       const ws = new WebSocket(
          `${config.SOCKET_SERVER_URL}` +
-         `?docId=${this.state.docId}`
+         `?docId=${docId}`
       );
 
       ws.onmessage = (event: MessageEvent) => {
@@ -94,7 +94,6 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
 
             case WebsocketEventType.CONTENT_CHANGED:
                this.handleContentChange(message.data as ContentChangeData);
-
                break;
 
             case WebsocketEventType.ERROR:
@@ -130,7 +129,7 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
    }
 
 
-   handleContentChange(data: ContentChangeData) {
+   handleContentChange = (data: ContentChangeData) => {
       switch (data.type) {
          case ContentChangedType.LINE_ADDED:
             this.addLine(data.line);
@@ -140,10 +139,8 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
             this.removeLine(data.line);
             break;
 
-         case ContentChangedType.CHARACTER_ADDED:
-            break;
-
-         case ContentChangedType.CHARACTER_REMOVED:
+         case ContentChangedType.LINE_CHANGED:
+            this.changeLine(data.line, data.lineContent || '');
             break;
 
          default:
@@ -173,20 +170,29 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
    }
 
 
-   onContentLineChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
-      if (this.state.contentLines === undefined) {
-         return;
-      }
-
+   changeLine = (index: number, content: string) => {
       this.setState({
          contentLines: [
             ...this.state.contentLines.slice(0, index),
-            event.target.value,
+            content,
             ...this.state.contentLines.slice(index + 1)
          ]
-      })
+      });
+   }
+
+
+   onContentLineChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+      this.changeLine(index, event.target.value)
 
       // TODO: update server-side document about line changed
+      this.state.ws?.send(JSON.stringify({
+         type: WebsocketEventType.CONTENT_CHANGED,
+         data: {
+            type: ContentChangedType.LINE_CHANGED,
+            line: index,
+            lineContent: event.target.value
+         } as ContentChangeData
+      } as ContentChangedEvent));
    }
 
 
