@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import { RouteComponentProps } from 'react-router-dom';
 import * as H from 'history';
 import axios from 'axios';
@@ -24,12 +24,16 @@ export interface DocumentProps extends RouteComponentProps<{
 
 export default class DocumentComponent extends React.Component<DocumentProps, any> {
 
+   inputLines: (HTMLInputElement | null)[] = [];
+
    state: {
       docId?: number;
       name?: string;
       title: string;
       contentLines: string[];
       viewers: string[];
+      lineSelected?: number;
+      cursorPosition?: number;
       ws?: WebSocket;
    } = {
          title: '',
@@ -77,7 +81,6 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
 
       ws.onmessage = (event: MessageEvent) => {
          const message = JSON.parse(event.data) as WebsocketEvent;
-         console.log(message);
 
          switch (message.type) {
             case WebsocketEventType.VIEWER_CONNECTED:
@@ -132,7 +135,8 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
    handleContentChange = (data: ContentChangeData) => {
       switch (data.type) {
          case ContentChangedType.LINE_ADDED:
-            this.addLine(data.line);
+            console.log(data);
+            this.addLine(data.line, data.cursorPosition);
             break;
 
          case ContentChangedType.LINE_REMOVED:
@@ -149,23 +153,31 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
    }
 
 
-   addLine = (index: number) => {
+   addLine = (index: number, cursorPosition: number | undefined) => {
       this.setState({
          contentLines: [
-            ...this.state.contentLines.slice(0, index + 1),
-            '',
+            ...this.state.contentLines.slice(0, index),
+            this.state.contentLines[index].substring(0, cursorPosition),
+            this.state.contentLines[index].substring(cursorPosition || 0),
             ...this.state.contentLines.slice(index + 1)
-         ]
+         ],
+         lineSelected: index + 1,
+         cursorPosition: 0
       });
    }
 
 
    removeLine = (index: number) => {
+      const previousLineLength = this.state.contentLines[index - 1].length;
+
       this.setState({
          contentLines: [
-            ...this.state.contentLines.slice(0, index),
+            ...this.state.contentLines.slice(0, index - 1),
+            this.state.contentLines[index - 1] + this.state.contentLines[index],
             ...this.state.contentLines.slice(index + 1)
-         ]
+         ],
+         lineSelected: index - 1,
+         cursorPosition: previousLineLength
       });
    }
 
@@ -176,15 +188,21 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
             ...this.state.contentLines.slice(0, index),
             content,
             ...this.state.contentLines.slice(index + 1)
-         ]
+         ],
       });
    }
 
 
    onContentLineChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
-      this.changeLine(index, event.target.value)
+      this.changeLine(index, event.target.value);
 
-      // TODO: update server-side document about line changed
+      const newCursorPosition = this.inputLines[index]?.selectionStart;
+      if (newCursorPosition !== null) {
+         this.setState({
+            cursorPosition: this.inputLines[index]?.selectionStart
+         });
+      }
+
       this.state.ws?.send(JSON.stringify({
          type: WebsocketEventType.CONTENT_CHANGED,
          data: {
@@ -197,37 +215,96 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
 
 
    onContentLineKeyDown = (index: number, event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === 'Backspace' && this.state.contentLines[index].length === 0) {
-         this.removeLine(index);
+      if (event.key === 'Backspace' && this.state.cursorPosition !== undefined && this.state.lineSelected !== undefined) {
+         if (this.state.cursorPosition === 0 && this.state.lineSelected > 0) {
+            event.preventDefault()
+            this.removeLine(index);
 
-         this.state.ws?.send(JSON.stringify({
-            type: WebsocketEventType.CONTENT_CHANGED,
-            data: {
-               type: ContentChangedType.LINE_REMOVED,
-               line: index
-            } as ContentChangeData
-         } as ContentChangedEvent));
+            this.state.ws?.send(JSON.stringify({
+               type: WebsocketEventType.CONTENT_CHANGED,
+               data: {
+                  type: ContentChangedType.LINE_REMOVED,
+                  line: index,
+                  cursorPosition: this.state.cursorPosition
+               } as ContentChangeData
+            } as ContentChangedEvent));
+
+         }
 
          return;
       }
 
       if (event.key === 'Enter') {
-         this.addLine(index);
+         this.addLine(index, this.state.cursorPosition);
 
          this.state.ws?.send(JSON.stringify({
             type: WebsocketEventType.CONTENT_CHANGED,
             data: {
                type: ContentChangedType.LINE_ADDED,
-               line: index
+               line: index,
+               cursorPosition: this.state.cursorPosition
             } as ContentChangeData
          } as ContentChangedEvent));
 
          return;
       }
+
+      if (event.key === 'ArrowUp' && this.state.lineSelected !== undefined) {
+         event.preventDefault();
+
+         if (this.state.lineSelected > 0) {
+            this.setState({
+               lineSelected: this.state.lineSelected - 1
+            })
+         }
+
+         return;
+      }
+
+      if (event.key === 'ArrowDown' && this.state.lineSelected !== undefined) {
+         event.preventDefault();
+
+         if (this.state.lineSelected < this.state.contentLines.length - 1) {
+            this.setState({
+               lineSelected: this.state.lineSelected + 1
+            })
+         }
+
+         return;
+      }
+
+      if (event.key === 'ArrowLeft' && this.state.lineSelected !== undefined && this.state.cursorPosition !== undefined
+         && this.state.cursorPosition > 0) {
+         event.preventDefault();
+         this.setState({
+            cursorPosition: this.state.cursorPosition - 1
+         })
+
+         return;
+      }
+
+      if (event.key === 'ArrowRight' && this.state.lineSelected !== undefined && this.state.cursorPosition !== undefined
+         && this.state.cursorPosition < this.state.contentLines[this.state.lineSelected].length) {
+         event.preventDefault();
+         this.setState({
+            cursorPosition: this.state.cursorPosition + 1
+         })
+
+         return;
+      }
+   }
+
+   onContentLineClick = (index: number, event: React.MouseEvent<HTMLInputElement, MouseEvent>) => {
+      this.setState({
+         lineSelected: index,
+         cursorPosition: this.inputLines[index]?.selectionStart
+      })
    }
 
 
    render() {
+      this.inputLines = this.state.contentLines.map(() => null);
+
       return (
          <div>
             <div className="viewers">
@@ -241,19 +318,50 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
                {this.state.title}
             </div>
 
+            <p>line {this.state.lineSelected}</p>
+            <p>pos {this.state.cursorPosition}</p>
+
             <div className="content">
                {this.state.contentLines?.map((line, index) =>
-                  <Fragment>
-                     <input key={index} type="text" className="content-line" value={line}
+                  <div className={'content-line ' + (index === this.state.lineSelected ? 'line-selected' : '')}>
+                     <span className="content-line index">
+                        {index}
+                     </span>
+
+                     <input key={index} type="text" value={line} className="content-line"
+                        ref={input => {
+                           if (input && index === this.state.lineSelected) {
+                              input.focus();
+
+                              // bind cursor position to selection range
+                              if (this.state.cursorPosition !== undefined && input.value.length < this.state.cursorPosition) {
+                                 this.setState({
+                                    cursorPosition: input.value.length
+                                 });
+
+                                 input.selectionStart = input.value.length;
+                                 input.selectionEnd = input.value.length;
+                              } else {
+                                 input.selectionStart = this.state.cursorPosition || 0;
+                                 input.selectionEnd = this.state.cursorPosition || 0;
+                              }
+                           }
+
+                           this.inputLines[index] = input;
+                        }}
                         onInput={(event: React.ChangeEvent<HTMLInputElement>) =>
                            this.onContentLineChange(index, event)
                         }
                         onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) =>
                            this.onContentLineKeyDown(index, event)
                         }
+                        onClick={(event: React.MouseEvent<HTMLInputElement>) =>
+                           this.onContentLineClick(index, event)
+                        }
                      />
+
                      <br />
-                  </Fragment>
+                  </div>
                )}
             </div>
          </div>

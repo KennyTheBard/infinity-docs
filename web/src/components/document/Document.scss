@@ -4,7 +4,6 @@
 
 .content {
    margin: 10px;
-   padding-left: 10px;
    padding-right: 10px;
    border-style: ridge;
    border-width: 2px;
@@ -12,13 +11,31 @@
    border-radius: 3px;
    min-height: 3px;
 
-   input.content-line {
-      border: 0px;
-      width: 100%;
+   .content-line {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
       
-      &:focus {
-         outline: none;
+      &.line-selected {
          background-color: lightgrey;
+      }
+
+      &.index {
+         width: 40px;
+         height: 18px;
+         text-align: end;
+         border-right: 2px solid #404040;
+      }
+
+      & input {
+         padding-left: 5px;
+         border: 0px;
+         width: 100%;
+         background: transparent;
+         
+         &:focus {
+            outline: none;
+         }
       }
    }
 }

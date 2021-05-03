@@ -158,11 +158,25 @@ export class WebsocketService {
 
          switch (ccMsg.data.type) {
             case ContentChangedType.LINE_ADDED:
-               docSession.content = docSession.content.splice(ccMsg.data.line, 0, '');
+               console.log("content length:", docSession.content.length)
+               console.log("line:",ccMsg.data.line)
+               console.log("cursor position:",ccMsg.data.cursorPosition)
+
+
+               docSession.content.splice(
+                  ccMsg.data.line,
+                  1,
+                  docSession.content[ccMsg.data.line].substring(0, ccMsg.data.cursorPosition || 0),
+                  docSession.content[ccMsg.data.line].substring(ccMsg.data.cursorPosition)
+               );
                break;
 
             case ContentChangedType.LINE_REMOVED:
-               docSession.content = docSession.content.splice(ccMsg.data.line, 1);
+               docSession.content.splice(
+                  ccMsg.data.line - 1,
+                  2,
+                  docSession.content[ccMsg.data.line - 1] + docSession.content[ccMsg.data.line]
+               );
                break;
 
             case ContentChangedType.LINE_CHANGED:
