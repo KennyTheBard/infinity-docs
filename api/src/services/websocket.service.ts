@@ -12,8 +12,10 @@ import * as http from 'http';
 import * as url from 'url';
 import { v4 as uuid } from 'uuid';
 import { InstanceManager } from '../util/instance-manager';
+import ReadWriteLock from 'rwlock';
 
 interface DocumentSession {
+   title: string;
    content: string[]; // document contents split in lines
    viewers: Viewer[];
 }
@@ -26,13 +28,15 @@ interface Viewer {
 export class WebsocketService {
 
    private readonly sessions: Map<number, DocumentSession> = new Map<number, DocumentSession>();
-   private readonly documentService: DocumentService
-
+   private readonly updateTimers: Map<number, NodeJS.Timeout> = new Map<number, NodeJS.Timeout>();
+   private readonly documentService: DocumentService;
+   private readonly documentLock: ReadWriteLock;
 
    constructor(
       private readonly router: expressWs.Router,
    ) {
       this.documentService = InstanceManager.get(DocumentService);
+      this.documentLock = new ReadWriteLock();
 
       this.initWebsocketServer();
    }
@@ -47,17 +51,19 @@ export class WebsocketService {
             ws.close(1011, 'No docId provided or wrong format');
          }
 
+         // create new viewer
          const viewerName = uuid();
-
          const viewer = {
             name: viewerName,
             ws
          };
 
+         // create new session
          let newSession = false;
          let docSession = this.sessions.get(docId);
          if (docSession === undefined) {
             docSession = {
+               title: '',
                content: [],
                viewers: []
             };
@@ -83,6 +89,7 @@ export class WebsocketService {
             }
          })));
 
+         // add the new session to the session manager
          docSession.viewers.push(viewer);
          this.sessions.set(docId, docSession);
 
@@ -110,8 +117,6 @@ export class WebsocketService {
             // update sessions
             if (docSession.viewers.length === 0) {
                this.sessions.delete(docId);
-            } else {
-               this.sessions.set(docId, docSession);
             }
          });
 
@@ -129,8 +134,9 @@ export class WebsocketService {
 
    loadDocumentContent = async (docId: number) => {
       const docSession = this.sessions.get(docId);
-      docSession.content = (await this.documentService.getById(docId)).content.split('\n');
-      this.sessions.set(docId, docSession);
+      const doc = await this.documentService.getById(docId);
+      docSession.content = doc.content.split('\n');
+      docSession.title = doc.title;
    }
 
 
@@ -153,40 +159,56 @@ export class WebsocketService {
 
       if ((message as ContentChangedEvent) !== undefined) {
          const ccMsg = message as ContentChangedEvent;
-         let line;
          let docSession = this.sessions.get(docId);
 
-         switch (ccMsg.data.type) {
-            case ContentChangedType.LINE_ADDED:
-               console.log("content length:", docSession.content.length)
-               console.log("line:",ccMsg.data.line)
-               console.log("cursor position:",ccMsg.data.cursorPosition)
+         // get lock on document
+         this.documentLock.writeLock(''+docId, (release) => {
+            // cancel database update
+            const existingTimer = this.updateTimers.get(docId);
+            if (existingTimer !== undefined) {
+               clearTimeout(existingTimer);
+            } 
 
+            switch (ccMsg.data.type) {
+               case ContentChangedType.LINE_ADDED:
+                  // TODO: Check if the lineIndex exists
+                  docSession.content.splice(
+                     ccMsg.data.lineIndex,
+                     1,
+                     docSession.content[ccMsg.data.lineIndex].substring(0, ccMsg.data.cursorPosition || 0),
+                     docSession.content[ccMsg.data.lineIndex].substring(ccMsg.data.cursorPosition)
+                  );
+                  break;
+   
+               case ContentChangedType.LINE_REMOVED:
+                  // TODO: Check if lineIndex - 1 and lineIndex exist
+                  docSession.content.splice(
+                     ccMsg.data.lineIndex - 1,
+                     2,
+                     docSession.content[ccMsg.data.lineIndex - 1] + docSession.content[ccMsg.data.lineIndex]
+                  );
+                  break;
+   
+               case ContentChangedType.LINE_CHANGED:
+                  // TODO: Check if the lineIndex exists
+                  docSession.content[ccMsg.data.lineIndex] = ccMsg.data.lineContent;
+                  break;
+            }
 
-               docSession.content.splice(
-                  ccMsg.data.line,
-                  1,
-                  docSession.content[ccMsg.data.line].substring(0, ccMsg.data.cursorPosition || 0),
-                  docSession.content[ccMsg.data.line].substring(ccMsg.data.cursorPosition)
-               );
-               break;
+            // set timer to update database
+            const timer = setTimeout(async () => {
+               this.documentService.update(docId, {
+                  title: docSession.title,
+                  content: docSession.content.join('\n')
+               });
+            }, 3000);
+            this.updateTimers.set(docId, timer);
 
-            case ContentChangedType.LINE_REMOVED:
-               docSession.content.splice(
-                  ccMsg.data.line - 1,
-                  2,
-                  docSession.content[ccMsg.data.line - 1] + docSession.content[ccMsg.data.line]
-               );
-               break;
+            // release lock
+            release();
+         });
 
-            case ContentChangedType.LINE_CHANGED:
-               line = docSession.content[ccMsg.data.line];
-               docSession.content[ccMsg.data.line] = ccMsg.data.lineContent;
-               break;
-         }
-
-         this.sessions.set(docId, docSession);
-
+         // update the other viewers regarding the content changes
          docSession.viewers.filter(v => v.name !== name)
             .forEach(v => v.ws.send(
                JSON.stringify(message)

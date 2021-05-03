@@ -1,41 +1,52 @@
 .title {
-
-} 
+}
 
 .content {
+   overflow: auto;
+   height: 75vh;
    margin: 10px;
-   padding-right: 10px;
    border-style: ridge;
    border-width: 2px;
    border-color: black;
    border-radius: 3px;
-   min-height: 3px;
+   background-color: lightgrey;
 
    .content-line {
+      background-color: white;
       display: flex;
       align-items: flex-start;
       justify-content: center;
-      
+
       &.line-selected {
          background-color: lightgrey;
       }
 
-      &.index {
+      .content-index {
          width: 40px;
          height: 18px;
          text-align: end;
          border-right: 2px solid #404040;
       }
 
-      & input {
+      textarea {
+         overflow: hidden;
+         white-space: nowrap;
+         padding-right: 10px;
          padding-left: 5px;
-         border: 0px;
+         border: none;
+         outline: none;
+         border-color: transparent; 
+         resize: none;
          width: 100%;
          background: transparent;
-         
+
          &:focus {
             outline: none;
          }
+      }
+
+      &:last-child {
+         border-bottom: 2px solid #404040;
       }
    }
 }

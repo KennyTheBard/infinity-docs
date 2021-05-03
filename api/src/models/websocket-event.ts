@@ -50,7 +50,7 @@ export enum ContentChangedType {
 
 export interface ContentChangeData {
    type: ContentChangedType,
-   line: number,
+   lineIndex: number,
    cursorPosition?: number,
    lineContent?: string
 }

@@ -24,7 +24,7 @@ export interface DocumentProps extends RouteComponentProps<{
 
 export default class DocumentComponent extends React.Component<DocumentProps, any> {
 
-   inputLines: (HTMLInputElement | null)[] = [];
+   inputLines: (HTMLTextAreaElement | null)[] = [];
 
    state: {
       docId?: number;
@@ -136,15 +136,15 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
       switch (data.type) {
          case ContentChangedType.LINE_ADDED:
             console.log(data);
-            this.addLine(data.line, data.cursorPosition);
+            this.addLine(data.lineIndex, data.cursorPosition);
             break;
 
          case ContentChangedType.LINE_REMOVED:
-            this.removeLine(data.line);
+            this.removeLine(data.lineIndex);
             break;
 
          case ContentChangedType.LINE_CHANGED:
-            this.changeLine(data.line, data.lineContent || '');
+            this.changeLine(data.lineIndex, data.lineContent || '');
             break;
 
          default:
@@ -193,7 +193,7 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
    }
 
 
-   onContentLineChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+   onContentLineChange = (index: number, event: React.ChangeEvent<HTMLTextAreaElement>) => {
       this.changeLine(index, event.target.value);
 
       const newCursorPosition = this.inputLines[index]?.selectionStart;
@@ -207,14 +207,14 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
          type: WebsocketEventType.CONTENT_CHANGED,
          data: {
             type: ContentChangedType.LINE_CHANGED,
-            line: index,
+            lineIndex: index,
             lineContent: event.target.value
          } as ContentChangeData
       } as ContentChangedEvent));
    }
 
 
-   onContentLineKeyDown = (index: number, event: React.KeyboardEvent<HTMLInputElement>) => {
+   onContentLineKeyDown = (index: number, event: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (event.key === 'Backspace' && this.state.cursorPosition !== undefined && this.state.lineSelected !== undefined) {
          if (this.state.cursorPosition === 0 && this.state.lineSelected > 0) {
             event.preventDefault()
@@ -224,7 +224,7 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
                type: WebsocketEventType.CONTENT_CHANGED,
                data: {
                   type: ContentChangedType.LINE_REMOVED,
-                  line: index,
+                  lineIndex: index,
                   cursorPosition: this.state.cursorPosition
                } as ContentChangeData
             } as ContentChangedEvent));
@@ -235,13 +235,15 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
       }
 
       if (event.key === 'Enter') {
+         event.preventDefault();
+
          this.addLine(index, this.state.cursorPosition);
 
          this.state.ws?.send(JSON.stringify({
             type: WebsocketEventType.CONTENT_CHANGED,
             data: {
                type: ContentChangedType.LINE_ADDED,
-               line: index,
+               lineIndex: index,
                cursorPosition: this.state.cursorPosition
             } as ContentChangeData
          } as ContentChangedEvent));
@@ -294,7 +296,7 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
       }
    }
 
-   onContentLineClick = (index: number, event: React.MouseEvent<HTMLInputElement, MouseEvent>) => {
+   onContentLineClick = (index: number, event: React.MouseEvent<HTMLTextAreaElement, MouseEvent>) => {
       this.setState({
          lineSelected: index,
          cursorPosition: this.inputLines[index]?.selectionStart
@@ -310,7 +312,7 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
             <div className="viewers">
                Viewers:
                {[...this.state.viewers, this.state.name]
-                  .map((name, index) => <span key={index}>{name}</span>)
+                  .map((name, index) => <span key={'viewer' + index}>{name}</span>)
                }
             </div>
 
@@ -318,17 +320,14 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
                {this.state.title}
             </div>
 
-            <p>line {this.state.lineSelected}</p>
-            <p>pos {this.state.cursorPosition}</p>
-
             <div className="content">
                {this.state.contentLines?.map((line, index) =>
-                  <div className={'content-line ' + (index === this.state.lineSelected ? 'line-selected' : '')}>
-                     <span className="content-line index">
+                  <div className={'content-line ' + (index === this.state.lineSelected ? 'line-selected' : '')} key={'line' + index}>
+                     <span className="content-index">
                         {index}
                      </span>
 
-                     <input key={index} type="text" value={line} className="content-line"
+                     <textarea value={line} rows={1} spellCheck={false}
                         ref={input => {
                            if (input && index === this.state.lineSelected) {
                               input.focus();
@@ -349,13 +348,13 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
 
                            this.inputLines[index] = input;
                         }}
-                        onInput={(event: React.ChangeEvent<HTMLInputElement>) =>
+                        onInput={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
                            this.onContentLineChange(index, event)
                         }
-                        onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) =>
+                        onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement>) =>
                            this.onContentLineKeyDown(index, event)
                         }
-                        onClick={(event: React.MouseEvent<HTMLInputElement>) =>
+                        onClick={(event: React.MouseEvent<HTMLTextAreaElement>) =>
                            this.onContentLineClick(index, event)
                         }
                      />
