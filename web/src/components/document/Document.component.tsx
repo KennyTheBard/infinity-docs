@@ -13,6 +13,7 @@ import {
    WebsocketEvent,
    WebsocketEventType
 } from '../../model/websocket-event';
+import { Viewer } from '../viewer/Viewer.component';
 
 
 export interface DocumentProps extends RouteComponentProps<{
@@ -43,16 +44,9 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
          viewers: []
       }
 
-   constructor(props: DocumentProps) {
-      super(props);
-
-      this.setState({
-         name: 'test' + Date.now()
-      });
-   }
-
    componentDidMount() {
       this.setState({
+         name: 'test' + Date.now(),
          docId: parseInt(this.props.match.params.docId)
       }, () => this.loadDocument());
    }
@@ -68,17 +62,17 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
             this.setState({
                title: res.data.title,
                contentLines: res.data.content.split('\n')
-            }, () => this.connectToWebsocket(this.state.docId))
+            }, () => this.connectToWebsocket())
          ).catch((err) =>
             this.props.alert(err.message)
          );
    }
 
 
-   connectToWebsocket = (docId: number | undefined) => {
+   connectToWebsocket = () => {
       const ws = new WebSocket(
          `${config.SOCKET_SERVER_URL}` +
-         `?docId=${docId}`
+         `?docId=${this.state.docId}&name=${this.state.name}`
       );
 
       ws.onmessage = (event: MessageEvent) => {
@@ -87,7 +81,7 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
          switch (message.type) {
             case WebsocketEventType.VIEWER_CONNECTED:
                this.setState({
-                  viewers: [...this.state.viewers, message.data.name]
+                  viewers: [...this.state.viewers.filter(name => name !== message.data.name), message.data.name]
                });
                break;
 
@@ -137,7 +131,6 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
    handleContentChange = (data: ContentChangeData) => {
       switch (data.type) {
          case ContentChangedType.LINE_ADDED:
-            console.log(data);
             this.addLine(data.lineIndex || 0, data.cursorPosition);
             break;
 
@@ -343,9 +336,8 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
       return (
          <div>
             <div className="viewers">
-               Viewers:
                {[...this.state.viewers, this.state.name]
-                  .map((name, index) => <span key={'viewer' + index}>{name}</span>)
+                  .map((name, index) => <Viewer key={'viewer' + index} name={name}/>)
                }
             </div>
 
@@ -371,6 +363,16 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
                   Download
                </button>
             </div>
+         
+            {/* Uncomment for debugging: */}
+            {/* <div>
+               <p>
+                  lineSelected: {this.state.lineSelected}
+               </p>
+               <p>
+                  cursorPosition: {this.state.cursorPosition}
+               </p>
+            </div> */}
 
             <div className="content">
                {this.state.contentLines?.map((line, index) =>
@@ -391,10 +393,10 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
                                  });
 
                                  input.selectionStart = input.value.length;
-                                 input.selectionEnd = input.value.length;
+                                 // input.selectionEnd = input.value.length; // seems to work fine without this
                               } else {
                                  input.selectionStart = this.state.cursorPosition || 0;
-                                 input.selectionEnd = this.state.cursorPosition || 0;
+                                 // input.selectionEnd = this.state.cursorPosition || 0; // seems to work fine without this
                               }
                            }
 

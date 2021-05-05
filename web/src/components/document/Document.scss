@@ -22,6 +22,11 @@
    }
 }
 
+.viewers {
+   display: flex;
+   flex-direction: row;
+}
+
 .content {
    overflow: auto;
    overflow-y: auto;

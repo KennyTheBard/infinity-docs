@@ -10,7 +10,6 @@ import expressWs from 'express-ws';
 import * as ws from 'ws';
 import * as http from 'http';
 import * as url from 'url';
-import { v4 as uuid } from 'uuid';
 import { InstanceManager } from '../util/instance-manager';
 import ReadWriteLock from 'rwlock';
 
@@ -46,13 +45,17 @@ export class WebsocketService {
       this.router.ws('/', (ws: ws, req: http.IncomingMessage) => {
          const query = url.parse(req.url, true).query;
          const docId = query.docId as unknown as number;
+         const viewerName = query.name as unknown as string;
 
          if (!docId) {
             ws.close(1011, 'No docId provided or wrong format');
          }
 
+         if (!viewerName) {
+            ws.close(1011, 'No name provided or wrong format');
+         }
+
          // create new viewer
-         const viewerName = uuid();
          const viewer = {
             name: viewerName,
             ws

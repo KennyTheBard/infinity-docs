@@ -4,7 +4,9 @@ import { DocumentPreviewModel } from '../../model/document.model';
 import * as H from 'history';
 import axios from 'axios';
 import config from '../../utils/config';
+import moment from 'moment';
 import './Home.scss';
+
 
 export interface HomeProps extends RouteComponentProps {
    alert: (message: string) => void;
@@ -66,12 +68,22 @@ export default class HomeComponent extends React.Component<HomeProps, any> {
          )
    }
 
+   formatDate = (timestamp: number): string => {
+      const timestampMoment = moment(timestamp);
+      const daysSince = moment().diff(timestampMoment, 'days');
+
+      if (daysSince < 1) {
+         return timestampMoment.format('h:mm:ss a');
+      } else if (daysSince < 7) {
+         return timestampMoment.format('dddd');
+      } else {
+         return timestampMoment.format('Do [of] MMMM YYYY');
+      }
+   }
+
    render() {
       return (
          <div>
-            {/* <button onClick={() => this.props.history.push(`/${}`)}>
-               Edit document
-            </button> */}
             <div className="actions">
                <button onClick={this.newDocument}>
                   New document
@@ -83,6 +95,12 @@ export default class HomeComponent extends React.Component<HomeProps, any> {
                   <div key={d.id} className="document-preview">
                      <span>
                         {d.title}
+                     </span>
+                     <span>
+                        {this.formatDate(d.created_at)}
+                     </span>
+                     <span>
+                        {this.formatDate(d.update_at)}
                      </span>
                      <span>
                         <button onClick={() => this.editDocument(d.id)}>

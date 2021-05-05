@@ -5,4 +5,6 @@ export interface DocumentModel extends DocumentPreviewModel {
 export interface DocumentPreviewModel {
    id: number;
    title: string;
+   created_at: number;
+   update_at: number;
 }

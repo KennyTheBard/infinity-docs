@@ -10,6 +10,7 @@ import { ErrorHandlerMiddleware } from './middleware';
 import { createConnection } from 'typeorm';
 import { DocumentController } from './controllers/document.controller';
 import { WebsocketService } from './services/websocket.service';
+import { AccountController } from './controllers/account.controller';
 
 const init = async () => {
    try {
@@ -41,7 +42,7 @@ const init = async () => {
       InstanceManager.register(new WebsocketService(router));
 
       // init middleware
-      // Ex: InstanceManager.register(middleware instance);
+      // InstanceManager.register(middleware instance);
 
       // add middleware
       app.use(express.json());
@@ -50,6 +51,7 @@ const init = async () => {
 
       // init controllers
       [
+         new AccountController(),
          new DocumentController()
       ].forEach(controller => app.use(`${controller.path}`, controller.router))
 

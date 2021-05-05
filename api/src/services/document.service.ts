@@ -26,7 +26,7 @@ export class DocumentService {
 
    getPreview = async (pagination: PaginationFilter): Promise<[DocumentUserView[], number]> => {
       return await this.documentRepository.createQueryBuilder('document')
-         .select(['document.id', 'document.title'])
+         .select(['document.id', 'document.title', 'document.createdAt', 'document.updatedAt'])
          .skip(pagination.page * pagination.size)
          .limit(pagination.size)
          .getManyAndCount();
