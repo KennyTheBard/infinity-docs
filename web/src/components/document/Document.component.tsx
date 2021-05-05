@@ -51,6 +51,10 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
       }, () => this.loadDocument());
    }
 
+   componentWillUnmount() {
+      this.state.ws?.close();
+   }
+
 
    loadDocument = () => {
       if (this.state.docId === undefined) {
@@ -335,10 +339,22 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
 
       return (
          <div>
-            <div className="viewers">
-               {[...this.state.viewers, this.state.name]
-                  .map((name, index) => <Viewer key={'viewer' + index} name={name}/>)
-               }
+            <div className="controls">
+               <div className="actions">
+                  <button onClick={() => this.props.history.push('/')}>
+                     Home
+                  </button>
+
+                  <button onClick={() => this.downloadFile()}>
+                     Download
+                  </button>
+               </div>
+
+               <div className="viewers">
+                  {[...this.state.viewers, this.state.name]
+                     .map((name, index) => <Viewer key={'viewer' + index} name={name} />)
+                  }
+               </div>
             </div>
 
             <div className="title">
@@ -358,12 +374,6 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
                />
             </div>
 
-            <div className="actions">
-               <button onClick={() => this.downloadFile()}>
-                  Download
-               </button>
-            </div>
-         
             {/* Uncomment for debugging: */}
             {/* <div>
                <p>
