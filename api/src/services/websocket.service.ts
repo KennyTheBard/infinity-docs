@@ -12,6 +12,7 @@ import * as http from 'http';
 import * as url from 'url';
 import { InstanceManager } from '../util/instance-manager';
 import ReadWriteLock from 'rwlock';
+import { throws } from 'assert';
 
 interface DocumentSession {
    title: string;
@@ -75,7 +76,9 @@ export class WebsocketService {
          }
 
          // notify other viewers on this user joining
-         docSession.viewers.forEach(v => v.ws.send(
+         docSession.viewers.forEach(v => this.safeWebsocketSend(
+            docId,
+            v.ws,
             JSON.stringify({
                type: WebsocketEventType.VIEWER_CONNECTED,
                data: {
@@ -85,12 +88,16 @@ export class WebsocketService {
          ));
 
          // notify this viewer of the viewers already connected
-         docSession.viewers.forEach(v => ws.send(JSON.stringify({
-            type: WebsocketEventType.VIEWER_CONNECTED,
-            data: {
-               name: v.name
-            }
-         })));
+         docSession.viewers.forEach(v => this.safeWebsocketSend(
+            docId,
+            ws,
+            JSON.stringify({
+               type: WebsocketEventType.VIEWER_CONNECTED,
+               data: {
+                  name: v.name
+               }
+            })
+         ));
 
          // add the new session to the session manager
          docSession.viewers.push(viewer);
@@ -102,25 +109,7 @@ export class WebsocketService {
          }
 
          ws.on('close', () => {
-            const docSession = this.sessions.get(docId);
-
-            // remove this viewer from the session
-            docSession.viewers = docSession.viewers.filter(v => v.name !== viewer.name);
-
-            // notify other viewers on this user leave
-            docSession.viewers.forEach(v => v.ws.send(
-               JSON.stringify({
-                  type: WebsocketEventType.VIEWER_DISCONNECTED,
-                  data: {
-                     name: viewer.name
-                  }
-               })
-            ));
-
-            // update sessions
-            if (docSession.viewers.length === 0) {
-               this.sessions.delete(docId);
-            }
+            this.handleDisconnect(docId, ws);
          });
 
          ws.on('message', (data: ws.Data) => {
@@ -142,6 +131,42 @@ export class WebsocketService {
       docSession.title = doc.title;
    }
 
+   safeWebsocketSend = (docId: number, ws: ws, message: string) => {
+      try {
+         ws.send(message);
+      } catch (err) {
+         this.handleDisconnect(docId, ws);
+      }
+   }
+
+
+   handleDisconnect = (
+      docId: number,
+      ws: ws
+   ) => {
+      const docSession = this.sessions.get(docId);
+
+      // remove this viewer from the session
+      const disconnectedViewer = docSession.viewers.filter(v => v.ws === ws)[0];
+      docSession.viewers = docSession.viewers.filter(v => v.ws !== ws);
+
+      // notify other viewers on this user leave
+      docSession.viewers.forEach(v => this.safeWebsocketSend(
+         docId,
+         v.ws,
+         JSON.stringify({
+            type: WebsocketEventType.VIEWER_DISCONNECTED,
+            data: {
+               name: disconnectedViewer.name
+            }
+         })
+      ));
+
+      // update sessions
+      if (docSession.viewers.length === 0) {
+         this.sessions.delete(docId);
+      }
+   }
 
    handleMessage = (
       docId: number,
@@ -153,10 +178,13 @@ export class WebsocketService {
 
       // check if message is correctly formated
       if (!message) {
-         ws.send(JSON.stringify({
-            type: WebsocketEventType.ERROR,
-            data: 'Incorrectly formated message'
-         }));
+         this.safeWebsocketSend(
+            docId,
+            ws,
+            JSON.stringify({
+               type: WebsocketEventType.ERROR,
+               data: 'Incorrectly formated message'
+            }));
          return;
       }
 
@@ -217,7 +245,9 @@ export class WebsocketService {
 
          // update the other viewers regarding the content changes
          docSession.viewers.filter(v => v.name !== name)
-            .forEach(v => v.ws.send(
+            .forEach(v => this.safeWebsocketSend(
+               docId,
+               v.ws,
                JSON.stringify(message)
             ));
 
