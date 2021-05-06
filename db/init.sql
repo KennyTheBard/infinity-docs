@@ -6,7 +6,7 @@ CREATE TABLE documents (
   updated_at timestamptz
 );
 
-CREATE TABLE users (
+CREATE TABLE accounts (
   id int PRIMARY KEY,
   username NOT NULL UNIQUE varchar,
   password NOT NULL varchar

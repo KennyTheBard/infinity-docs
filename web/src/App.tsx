@@ -5,6 +5,7 @@ import './App.scss';
 import React from 'react';
 import Helmet from 'react-helmet';
 import { Alert } from './components/alert/Alert.component';
+import AuthComponent from './components/auth/Auth.component';
 
 
 export default class App extends React.Component {
@@ -29,11 +30,11 @@ export default class App extends React.Component {
         message
       ]
     });
-    setTimeout(() => {
-      this.setState({ alerts: [...this.state.alerts].slice(1) });
-    },
-      3000
-    );
+    // setTimeout(() => {
+    //   this.setState({ alerts: [...this.state.alerts].slice(1) });
+    // },
+    //   3000
+    // );
   }
 
 
@@ -55,7 +56,10 @@ export default class App extends React.Component {
             <Route exact path={'/'} render={(matchProps) =>
               <HomeComponent {...matchProps} alert={this.addAlert} />
             } />
-            <Route exact path={'/:docId'} render={(matchProps) =>
+            <Route exact path={'/auth'} render={(matchProps) =>
+              <AuthComponent {...matchProps} alert={this.addAlert} />
+            } />
+            <Route exact path={'/edit/:docId'} render={(matchProps) =>
               <DocumentComponent {...matchProps} alert={this.addAlert} />
             } />
           </Switch>

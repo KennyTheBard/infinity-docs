@@ -74,7 +74,7 @@ export default class HomeComponent extends React.Component<HomeProps, any> {
    }
 
    editDocument = (docId: number) => {
-      this.props.history.push(`/${docId}`)
+      this.props.history.push(`/edit/${docId}`)
    }
 
    deleteDocument = (docId: number) => {

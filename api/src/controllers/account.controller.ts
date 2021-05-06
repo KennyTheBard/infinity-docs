@@ -17,7 +17,7 @@ export class AccountController {
    }
 
    /**
-    * POST /profile/register
+    * POST /account/register
     */
    register = async (req: Request, res: Response) => {
       const {
@@ -41,7 +41,7 @@ export class AccountController {
    }
 
    /**
-    * POST /profile/login
+    * POST /account/login
     */
    login = async (req: Request, res: Response) => {
       const {

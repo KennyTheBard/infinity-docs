@@ -1,3 +1,4 @@
+import { AccountService } from './services/account.service';
 import { DocumentService } from './services/document.service';
 import * as dotenv from 'dotenv';
 import express from 'express';
@@ -11,6 +12,7 @@ import { createConnection } from 'typeorm';
 import { DocumentController } from './controllers/document.controller';
 import { WebsocketService } from './services/websocket.service';
 import { AccountController } from './controllers/account.controller';
+import { Account } from './models/entities/account.entity';
 
 const init = async () => {
    try {
@@ -28,7 +30,8 @@ const init = async () => {
          synchronize: true,
          logging: process.env.ENABLE_DB_DEBUG === 'true',
          entities: [
-            Document
+            Document,
+            Account
          ]
       });
 
@@ -39,6 +42,7 @@ const init = async () => {
 
       // init services
       InstanceManager.register(new DocumentService(db));
+      InstanceManager.register(new AccountService(db));
       InstanceManager.register(new WebsocketService(router));
 
       // init middleware

@@ -8,7 +8,9 @@ import {
 } from 'typeorm';
 
 
-@Entity()
+@Entity({
+   name: 'documents'
+})
 export class Document {
 
    @PrimaryGeneratedColumn()

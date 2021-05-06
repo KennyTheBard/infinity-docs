@@ -1,0 +1,105 @@
+.auth-container {
+   background-color: #66a3ff;
+   background-image: repeating-linear-gradient(
+         transparent,
+         transparent 50px,
+         purple 50px,
+         purple 53px,
+         transparent 53px,
+         transparent 63px,
+         purple 63px,
+         purple 66px,
+         transparent 66px,
+         transparent 116px,
+         rgba(0, 0, 0, 0.5) 116px,
+         rgba(0, 0, 0, 0.5) 166px,
+         rgba(255, 255, 255, 0.2) 166px,
+         rgba(255, 255, 255, 0.2) 169px,
+         rgba(0, 0, 0, 0.5) 169px,
+         rgba(0, 0, 0, 0.5) 179px,
+         rgba(255, 255, 255, 0.2) 179px,
+         rgba(255, 255, 255, 0.2) 182px,
+         rgba(0, 0, 0, 0.5) 182px,
+         rgba(0, 0, 0, 0.5) 232px,
+         transparent 232px
+      ),
+      repeating-linear-gradient(
+         270deg,
+         transparent,
+         transparent 50px,
+         purple 50px,
+         purple 53px,
+         transparent 53px,
+         transparent 63px,
+         purple 63px,
+         purple 66px,
+         transparent 66px,
+         transparent 116px,
+         rgba(0, 0, 0, 0.5) 116px,
+         rgba(0, 0, 0, 0.5) 166px,
+         rgba(255, 255, 255, 0.2) 166px,
+         rgba(255, 255, 255, 0.2) 169px,
+         rgba(0, 0, 0, 0.5) 169px,
+         rgba(0, 0, 0, 0.5) 179px,
+         rgba(255, 255, 255, 0.2) 179px,
+         rgba(255, 255, 255, 0.2) 182px,
+         rgba(0, 0, 0, 0.5) 182px,
+         rgba(0, 0, 0, 0.5) 232px,
+         transparent 232px
+      );
+
+   height: 100vh;
+   width: 100vw;
+   align-items: center;
+   display: flex;
+   justify-content: center;
+
+   .auth-box {
+      background-color: white;
+      height: 512px;
+      width: 480px;
+      box-shadow: 10px 10px 0px 0px rgba(0, 0, 0, 0.5);
+
+      .auth-header {
+         font-size: 32px;
+         font-weight: 900;
+         text-align: center;
+         padding: 20px 0px;
+      }
+
+      .auth-body {
+         margin: 40px 80px;
+         * {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+
+            * {
+               margin: 20px 0px;
+            }
+
+            input {
+               border-radius: 3px;
+               border-color: #66a3ff;
+               height: 30px;
+               padding: 0px 5px;
+               outline: none;
+
+               &:focus {
+                  border-color: #B943B9;
+
+               }
+            }
+            
+            a {
+               text-decoration: none;
+               color: #66a3ff;
+
+               &:hover {
+                  color: #B943B9;
+               }
+            }
+         }
+      }
+   }
+}
