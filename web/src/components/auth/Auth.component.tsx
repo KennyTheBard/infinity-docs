@@ -23,11 +23,15 @@ export default class AuthComponent extends React.Component<AuthProps, any> {
       }
 
    componentDidMount() {
+      const username = localStorage.getItem('username');
+      if (username !== null) {
+         this.props.history.push('/');
+      }
    }
 
 
    login = () => {
-      if (this.state.username === undefined || this.state.password === undefined) {
+      if (!this.state.username || !this.state.password) {
          this.props.alert('Incomplete credentials')
          return;
       }
@@ -36,22 +40,24 @@ export default class AuthComponent extends React.Component<AuthProps, any> {
          username: this.state.username,
          password: this.state.password
       })
-         .then((res) =>
-            console.log(res.data)
-         ).catch((err) =>
-            this.props.alert(err.message)
+         .then((res) => {
+            localStorage.setItem('username', this.state.username || '');
+            window.location.reload();
+         }).catch((err) =>
+            this.props.alert(`[${err.response.status} ${err.response.statusText}] ${err.response.data}`)
          );
    }
 
 
    register = () => {
-      if (this.state.username === undefined || this.state.password === undefined) {
-         this.props.alert('Incomplete credentials')
+      if (!this.state.username || !this.state.password) {
+         this.props.alert('Incomplete credentials');
          return;
       }
 
       if (this.state.password !== this.state.retypePassword) {
-         this.props.alert('Passwords not matching')
+         this.props.alert('Passwords not matching');
+         return;
       }
 
       axios.post(`${config.HTTP_SERVER_URL}/account/register`, {
@@ -59,9 +65,14 @@ export default class AuthComponent extends React.Component<AuthProps, any> {
          password: this.state.password
       })
          .then((res) =>
-            console.log(res.data)
+            this.setState({
+               login: true,
+               username: '',
+               password: '',
+               retypePassword: ''
+            })
          ).catch((err) =>
-            this.props.alert(err.message)
+            this.props.alert(`[${err.response.status} ${err.response.statusText}] ${err.response.data}`)
          );
    }
 
@@ -79,26 +90,26 @@ export default class AuthComponent extends React.Component<AuthProps, any> {
                      <div className="login">
                         <input type="text" placeholder="username" value={this.state.username}
                            onChange={(e) => this.setState({
-                              username: e.target.value.length > 0 ? e.target.value : undefined
+                              username: e.target.value 
                            })} />
                         <input type="password" placeholder="password" value={this.state.password}
                            onChange={(e) => this.setState({
-                              password: e.target.value.length > 0 ? e.target.value : undefined
+                              password: e.target.value
                            })} />
                      </div>
                      :
                      <div className="register">
                         <input type="text" placeholder="username" value={this.state.username}
                            onChange={(e) => this.setState({
-                              username: e.target.value.length > 0 ? e.target.value : undefined
+                              username: e.target.value
                            })} />
                         <input type="password" placeholder="password" value={this.state.password}
                            onChange={(e) => this.setState({
-                              password: e.target.value.length > 0 ? e.target.value : undefined
+                              password: e.target.value
                            })} />
                         <input type="password" placeholder="retype password" value={this.state.retypePassword}
                            onChange={(e) => this.setState({
-                              retypePassword: e.target.value.length > 0 ? e.target.value : undefined
+                              retypePassword: e.target.value
                            })} />
                      </div>
                   }
@@ -112,7 +123,9 @@ export default class AuthComponent extends React.Component<AuthProps, any> {
                            <a href='/#' onClick={(e) => {
                               e.preventDefault();
                               this.setState({
-                                 login: false
+                                 login: false,
+                                 username: '',
+                                 password: ''
                               });
                            }}>
                               No account?
@@ -126,7 +139,10 @@ export default class AuthComponent extends React.Component<AuthProps, any> {
                            <a href='/#' onClick={(e) => {
                               e.preventDefault();
                               this.setState({
-                                 login: true
+                                 login: true,
+                                 username: '',
+                                 password: '',
+                                 retypePassword: ''
                               });
                            }}>
                               Already have an account?

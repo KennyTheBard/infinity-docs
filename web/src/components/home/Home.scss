@@ -1,57 +1,3 @@
-.documents {
-   border: 2px solid black;
-
-   .documents-header {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      margin-bottom: 2px;
-      padding: 10px;
-      margin: 0px 0px 10px 0px;
-      border-bottom: 2px solid darkgray;
-      background: lightgrey;
-
-      :first-child {
-         width: 35%;
-      }
-
-      :last-child {
-         width: 25%;
-         text-align: end;
-      }
-   }
-
-   .document-preview {
-      padding: 10px;
-
-      &:not(:last-child) {
-         border-bottom: 2px solid darkgray;
-      }
-
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-
-      .document-title {
-         width: 35%;
-         white-space: nowrap;
-         overflow: hidden;
-         text-overflow: ellipsis;
-      }
-
-      * {
-         align-items: center;
-      }
-
-      .actions {
-         display: flex;
-         flex-direction: row-reverse;
-         margin-left: 20px;
-         width: 25%;
-         align-content: flex-end;
-      }
-   }
-}
 
 button {
    background-color: darkslateblue;
@@ -85,4 +31,61 @@ button {
       flex-direction: row;
       align-content: flex-end;
    }
+
+   .documents {
+   border: 2px solid black;
+   background: white;
+
+   .documents-header {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      margin-bottom: 2px;
+      padding: 10px;
+      margin: 0px 0px 10px 0px;
+      border-bottom: 2px solid black;
+      background: lightgrey;
+
+      :first-child {
+         width: 35%;
+      }
+
+      :last-child {
+         width: 25%;
+         text-align: end;
+      }
+   }
+
+   .document-preview {
+      padding: 10px;
+
+      &:not(:last-child) {
+         border-bottom: 2px dotted black;
+      }
+
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+
+      .document-title {
+         width: 35%;
+         white-space: nowrap;
+         overflow: hidden;
+         text-overflow: ellipsis;
+      }
+
+      * {
+         align-items: center;
+      }
+
+      .actions {
+         display: flex;
+         flex-direction: row-reverse;
+         margin-left: 20px;
+         width: 25%;
+         align-content: flex-end;
+      }
+   }
 }
+}
+

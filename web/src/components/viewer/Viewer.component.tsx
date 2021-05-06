@@ -3,8 +3,8 @@ import './Viewer.scss';
 
 
 export function Viewer(props: { name: string | undefined }) {
-
     const gen = create(props.name);
+    Math.floor(gen(16777215)); // without this the generator gives another number each run
     const color = '#' + Math.floor(gen(16777215)).toString(16);
     return (
         <div className="viewer">

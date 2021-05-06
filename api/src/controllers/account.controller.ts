@@ -55,7 +55,7 @@ export class AccountController {
             throw new Error('Wrong credentials');
          }
 
-         res.status(201);
+         res.status(201).send();
       } catch (err) {
          res.status(401).send(err.message);
       }

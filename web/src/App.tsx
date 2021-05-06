@@ -30,11 +30,11 @@ export default class App extends React.Component {
         message
       ]
     });
-    // setTimeout(() => {
-    //   this.setState({ alerts: [...this.state.alerts].slice(1) });
-    // },
-    //   3000
-    // );
+    setTimeout(() => {
+      this.setState({ alerts: [...this.state.alerts].slice(1) });
+    },
+      3000
+    );
   }
 
 

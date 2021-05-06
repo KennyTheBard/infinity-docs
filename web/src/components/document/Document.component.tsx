@@ -45,8 +45,13 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
       }
 
    componentDidMount() {
+      const username = localStorage.getItem('username');
+      if (username === null) {
+         this.props.history.push('/auth');
+      }
+
       this.setState({
-         name: 'test' + Date.now(),
+         name: username,
          docId: parseInt(this.props.match.params.docId)
       }, () => this.loadDocument());
    }
@@ -68,7 +73,7 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
                contentLines: res.data.content.split('\n')
             }, () => this.connectToWebsocket())
          ).catch((err) =>
-            this.props.alert(err.message)
+            this.props.alert(`[${err.response.status} ${err.response.statusText}] ${err.response.data}`)
          );
    }
 

@@ -1,4 +1,3 @@
-
 .viewer {
    margin: 5px 10px 0px 0px;
 
@@ -16,12 +15,12 @@
          text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
       }
    }
-   
+
    .tooltip {
       position: relative;
       display: inline-block;
    }
-   
+
    /* Tooltip text */
    .tooltip .tooltiptext {
       visibility: hidden;
@@ -29,18 +28,17 @@
       color: #fff;
       text-align: center;
       padding: 5px 10px 5px 10px;
-      // top: 35px;
-      right: 150px;
+      top: 35px;
+      right: 35px;
       border-radius: 6px 0px 6px 6px;
-   
+
       /* Position the tooltip text - see examples below! */
-      position: relative;
+      position: absolute;
       z-index: 1;
    }
-   
+
    /* Show the tooltip text when you mouse over the tooltip container */
    .tooltip:hover .tooltiptext {
       visibility: visible;
    }
 }
-

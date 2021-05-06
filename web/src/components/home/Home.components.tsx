@@ -24,6 +24,11 @@ export default class HomeComponent extends React.Component<HomeProps, any> {
       }
 
    componentDidMount() {
+      const username = localStorage.getItem('username');
+      if (username === null) {
+         this.props.history.push('/auth');
+      }
+
       this.loadDocuments();
    }
 
@@ -39,7 +44,7 @@ export default class HomeComponent extends React.Component<HomeProps, any> {
                loadingData: false
             })
          ).catch((err) =>
-            this.props.alert(err.message)
+            this.props.alert(`[${err.response.status} ${err.response.statusText}] ${err.response.data}`)
          );
    }
 
@@ -49,9 +54,9 @@ export default class HomeComponent extends React.Component<HomeProps, any> {
          content: content || ''
       })
          .then((res) =>
-            this.props.history.push(`/${res.data.id}`)
+            this.props.history.push(`/edit/${res.data.id}`)
          ).catch((err) =>
-            this.props.alert(err.message)
+            this.props.alert(`[${err.response.status} ${err.response.statusText}] ${err.response.data}`)
          )
    }
 
@@ -82,7 +87,7 @@ export default class HomeComponent extends React.Component<HomeProps, any> {
          .then((res) =>
             this.loadDocuments()
          ).catch((err) =>
-            this.props.alert(err.message)
+            this.props.alert(`[${err.response.status} ${err.response.statusText}] ${err.response.data}`)
          )
    }
 
@@ -110,6 +115,12 @@ export default class HomeComponent extends React.Component<HomeProps, any> {
                </button>
                <button onClick={() => fileInputRef?.click()}>
                   Upload
+               </button>
+               <button onClick={() => {
+                  localStorage.removeItem('username');
+                  window.location.reload();
+               }}>
+                  Logout
                </button>
                <input type="file" id="myFile" name="filename"
                   style={{ visibility: 'hidden' }}
