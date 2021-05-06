@@ -43,16 +43,34 @@ export default class HomeComponent extends React.Component<HomeProps, any> {
          );
    }
 
-   newDocument = (event: React.MouseEvent<HTMLButtonElement>) => {
+   newDocument = (title?: string, content?: string) => {
       axios.post(`${config.HTTP_SERVER_URL}/document`, {
-         title: 'Untitled document',
-         content: 'This\nis\na\ntest'
+         title: title || 'Untitled document',
+         content: content || ''
       })
          .then((res) =>
             this.props.history.push(`/${res.data.id}`)
          ).catch((err) =>
             this.props.alert(err.message)
          )
+   }
+
+   uploadDocument = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (event.target.files === null || event.target.files?.length === 0) {
+         return;
+      }
+      var f = event.target.files[0];
+
+      if (f) {
+         var r = new FileReader();
+         r.onload = (e) => {
+            if (e.target != null) {
+               var contents = e.target.result as string;
+               this.newDocument(f.name, contents)
+            }
+         }
+         r.readAsText(f);
+      }
    }
 
    editDocument = (docId: number) => {
@@ -69,12 +87,12 @@ export default class HomeComponent extends React.Component<HomeProps, any> {
    }
 
    formatDate = (timestamp: number): string => {
-      const timestampMoment = moment(timestamp);
-      const daysSince = moment().diff(timestampMoment, 'days');
+      const timestampMoment = moment.unix(timestamp);
+      const daysSince = moment().diff(timestampMoment, 'hours');
 
-      if (daysSince < 1) {
+      if (daysSince < 12) {
          return timestampMoment.format('h:mm:ss a');
-      } else if (daysSince < 7) {
+      } else if (daysSince < 7 * 24) {
          return timestampMoment.format('dddd');
       } else {
          return timestampMoment.format('Do [of] MMMM YYYY');
@@ -82,34 +100,59 @@ export default class HomeComponent extends React.Component<HomeProps, any> {
    }
 
    render() {
+      let fileInputRef: HTMLInputElement | null = null;
+
       return (
-         <div>
-            <div className="actions">
-               <button onClick={this.newDocument}>
-                  New document
+         <div className="home-container">
+            <div className="home-actions">
+               <button onClick={() => this.newDocument()}>
+                  New
                </button>
+               <button onClick={() => fileInputRef?.click()}>
+                  Upload
+               </button>
+               <input type="file" id="myFile" name="filename"
+                  style={{ visibility: 'hidden' }}
+                  ref={input => fileInputRef = input}
+                  onChange={this.uploadDocument}
+               />
             </div>
 
             <div className="documents">
+               <div className="documents-header">
+                  <div className="document-title">
+                     Title
+                  </div>
+                  <div>
+                     Created at
+                  </div>
+                  <div>
+                     Last updated at
+                  </div>
+                  <div>
+                     Actions
+                  </div>
+               </div>
                {this.state.documents.map(d =>
                   <div key={d.id} className="document-preview">
-                     <span>
-                        {d.title}
-                     </span>
-                     <span>
-                        {this.formatDate(d.created_at)}
-                     </span>
-                     <span>
-                        {this.formatDate(d.update_at)}
-                     </span>
-                     <span>
-                        <button onClick={() => this.editDocument(d.id)}>
-                           Edit
-                        </button>
+                     <div className="document-title">
+                        {d.title.substring(0, 25) + (d.title.length > 25 ? '...' : '')}
+                     </div>
+                     <div>
+                        {this.formatDate(d.createdAt)}
+                     </div>
+                     <div>
+                        {this.formatDate(d.updatedAt)}
+                     </div>
+                     <div className="actions">
+                        {/* Place those in reverse order */}
                         <button onClick={() => this.deleteDocument(d.id)}>
                            Delete
                         </button>
-                     </span>
+                        <button onClick={() => this.editDocument(d.id)}>
+                           Edit
+                        </button>
+                     </div>
                   </div>
                )}
             </div>

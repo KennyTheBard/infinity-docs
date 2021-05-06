@@ -324,11 +324,23 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
    }
 
 
+   generateFileName = () => {
+      const parts = this.state.title.split('.');
+      let fileName = parts.join('.')
+      let fileExtension = parts[parts.length - 1];
+      if (parts.length - 1 < 0 || fileExtension.length === 0 || fileExtension.length > 6) {
+         fileName = `${this.state.title.replace(/\W/g, '').substring(0, 30).toLowerCase()}.txt`;
+      }
+
+      return fileName;
+   }
+
+
    downloadFile = () => {
       const element = document.createElement("a");
       const file = new Blob([this.state.contentLines.join('\n')], { type: 'text/plain' });
       element.href = URL.createObjectURL(file);
-      element.download = `${this.state.title.replace(/\W/g, '').substring(0, 30).toLowerCase()}.txt`;
+      element.download = this.generateFileName();
       document.body.appendChild(element);
       element.click();
    }

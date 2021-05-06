@@ -236,7 +236,7 @@ export class WebsocketService {
                   title: docSession.title,
                   content: docSession.content.join('\n')
                });
-            }, 3000);
+            }, 1000);
             this.updateTimers.set(docId, timer);
 
             // release lock
