@@ -1,2 +1,2 @@
 # kenny-docs
-GoogleDocs clone implemented in Node.js + React
+Google Docs clone implemented in Node.js with Express and React.js
