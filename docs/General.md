@@ -4,7 +4,7 @@
 
 For document persistance and account data, we used PostgreSQL.
 
-### Schema
+### Database schema
 
 Database schema has only 2 entities: Users and Documents. This way, we can provide authentication for the clients and persistance for documents.
 There is no mechanism for managing access to a document, meaning that once you create a document, anyone with an account can view and edit it.
