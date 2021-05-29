@@ -140,11 +140,11 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
    handleContentChange = (data: ContentChangeData) => {
       switch (data.type) {
          case ContentChangedType.LINE_ADDED:
-            this.addLine(data.lineIndex || 0, data.cursorPosition);
+            this.addLine(data.lineIndex || 0, data.cursorPosition, true);
             break;
 
          case ContentChangedType.LINE_REMOVED:
-            this.removeLine(data.lineIndex || 0);
+            this.removeLine(data.lineIndex || 0, true);
             break;
 
          case ContentChangedType.LINE_CHANGED:
@@ -163,32 +163,42 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
    }
 
 
-   addLine = (index: number, cursorPosition: number | undefined) => {
-      this.setState({
+   addLine = (index: number, cursorPosition: number | undefined, remoteChange?: boolean) => {
+      let newState: Record<string, any> = {
          contentLines: [
             ...this.state.contentLines.slice(0, index),
             this.state.contentLines[index].substring(0, cursorPosition),
             this.state.contentLines[index].substring(cursorPosition || 0),
             ...this.state.contentLines.slice(index + 1)
-         ],
-         lineSelected: index + 1,
-         cursorPosition: 0
-      });
+         ]
+      };
+
+      if (!remoteChange) {
+         newState.lineSelected = index + 1;
+         newState.cursorPosition = 0;
+      }
+
+      this.setState(newState);
    }
 
 
-   removeLine = (index: number) => {
+   removeLine = (index: number, remoteChange?: boolean) => {
       const previousLineLength = this.state.contentLines[index - 1].length;
 
-      this.setState({
+      let newState: Record<string, any> = {
          contentLines: [
             ...this.state.contentLines.slice(0, index - 1),
             this.state.contentLines[index - 1] + this.state.contentLines[index],
             ...this.state.contentLines.slice(index + 1)
-         ],
-         lineSelected: index - 1,
-         cursorPosition: previousLineLength
-      });
+         ]
+      };
+
+      if (!remoteChange) {
+         newState.lineSelected = index - 1;
+         newState.cursorPosition = previousLineLength;
+      }
+
+      this.setState(newState);
    }
 
 
