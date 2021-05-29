@@ -42,7 +42,7 @@ export default class App extends React.Component {
     return (
       <div className="App">
         <Helmet>
-          <title>KennyDocs</title>
+          <title>Infinity Docs</title>
           {/* <link rel="icon" type="image/png" href="dionysia.ico" sizes="16x16" /> */}
         </Helmet>
 
