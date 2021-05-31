@@ -430,10 +430,10 @@ export default class DocumentComponent extends React.Component<DocumentProps, an
                                  });
 
                                  input.selectionStart = input.value.length;
-                                 // input.selectionEnd = input.value.length; // seems to work fine without this
+                                 input.selectionEnd = input.value.length; // seems to work fine without this
                               } else {
                                  input.selectionStart = this.state.cursorPosition || 0;
-                                 // input.selectionEnd = this.state.cursorPosition || 0; // seems to work fine without this
+                                 input.selectionEnd = this.state.cursorPosition || 0; // seems to work fine without this
                               }
                            }
 
