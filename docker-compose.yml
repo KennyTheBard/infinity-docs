@@ -1,0 +1,35 @@
+version: "3.7"
+
+services:
+
+  documents-db:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: documentsdb
+      TZ: Europe/Bucharest
+      PGTZ: Europe/Bucharest
+    ports:
+      - "30014:5432"
+    volumes:
+      - documents_db:/var/lib/postgresql/documents_db
+      - ./sql/init-documents.sql:/docker-entrypoint-initdb.d/init-documents.sql
+      
+  auth-db:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: authdb
+      TZ: Europe/Bucharest
+      PGTZ: Europe/Bucharest
+    ports:
+      - "30015:5432"
+    volumes:
+      - auth_db:/var/lib/postgresql/auth_db
+      - ./sql/init-auth.sql:/docker-entrypoint-initdb.d/init-auth.sql
+
+volumes:
+  auth_db:
+  documents_db:
