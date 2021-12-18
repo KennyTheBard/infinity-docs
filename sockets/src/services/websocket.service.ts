@@ -72,7 +72,6 @@ export class WebsocketService {
 
             newSession = true;
          }
-         console.log(this.sessions);
 
          // notify other viewers on this user joining
          docSession.viewers.forEach(v => this.safeWebsocketSend(
